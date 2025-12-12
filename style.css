@@ -1,0 +1,53 @@
+body {
+    font-family: Arial, sans-serif;
+    background: #f3f3f3;
+    margin: 0;
+    padding: 0;
+    text-align: center;
+}
+
+.screen {
+    display: none;
+    padding: 20px;
+}
+
+.screen.active {
+    display: block;
+}
+
+input, textarea, select, button {
+    width: 90%;
+    padding: 14px;
+    margin: 10px 0;
+    font-size: 16px;
+}
+
+textarea {
+    height: 140px;
+}
+
+#textDisplay {
+    padding: 15px;
+    font-size: 18px;
+    background: white;
+    border-radius: 8px;
+    margin: 10px 0;
+    min-height: 100px;
+}
+
+.correct {
+    color: green;
+}
+
+.wrong {
+    color: red;
+    text-decoration: underline;
+}
+
+button {
+    background: black;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-weight: bold;
+}
