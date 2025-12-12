@@ -1,57 +1,39 @@
 <!doctype html>
-<html lang="en">
-<head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/><title>Osix — Profile</title>
-<link rel="stylesheet" href="style.css"></head>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Osix — Profile</title><link rel="stylesheet" href="style.css"></head>
 <body>
-  <div class="app">
-    <aside class="sidebar glass">
-      <div class="side-top">
-        <div class="side-avatar"><img id="sideAvatar" src=""/></div>
-        <div><div id="sideName" class="side-name">Student</div></div>
-      </div>
-      <nav class="side-menu">
-        <button class="side-btn" onclick="location.href='home.html'">Home</button>
-        <button class="side-btn" onclick="location.href='choose.html'">Choose Test</button>
-        <button class="side-btn" onclick="doLogout()">Logout</button>
-      </nav>
-      <div class="side-bottom">
-        <svg width="36" height="36" viewBox="0 0 100 100"><circle cx="50" cy="30" r="12" fill="#6ea8fe"/></svg>
-        <div class="tag">Made in India</div>
-      </div>
-    </aside>
+<div class="app">
+  <aside class="sidebar">
+    <div class="side-title">Menu</div>
+    <button class="side-btn" onclick="location.href='dashboard.html'">Home</button>
+    <button class="side-btn active">Profile</button>
+    <div class="side-bottom"><div>OSIX</div><div class="small">Made in India</div></div>
+  </aside>
 
-    <div class="main-col">
-      <header class="topbar glass">
-        <div class="top-left"><div class="top-avatar"><img id="topAvatar" src=""/></div><div id="topUserName" class="top-username">Student</div></div>
-        <div></div>
-      </header>
-
-      <div class="content page">
-        <section id="pageProfile" class="page">
-          <h2>My Profile</h2>
-          <div class="profile-grid">
-            <div class="pf-left">
-              <img id="profileBig" class="profile-big" src=""/>
-              <div style="margin-top:8px"><button id="choosePicBtn" class="btn">Choose Profile Picture</button><input id="filePic" class="hidden" type="file" accept="image/*"/></div>
-            </div>
-            <div class="pf-right">
-              <label>Name</label><input id="pfName" class="input" disabled/>
-              <label>Mobile</label><input id="pfMobile" class="input" disabled/>
-              <label>Email</label><input id="pfEmail" class="input" disabled/>
-              <label>District</label><input id="pfDistrict" class="input" disabled/>
-              <label>State</label><input id="pfState" class="input" disabled/>
-              <div style="margin-top:10px">
-                <button id="editDetails" class="btn">Edit Details</button>
-                <button id="saveDetails" class="btn primary">Save</button>
-              </div>
-            </div>
+  <div style="flex:1;display:flex;flex-direction:column">
+    <div class="topbar"><div class="top-left"><div class="dots">•••</div><div style="margin-left:8px"><div id="profNameTop" class="top-user">Name</div></div></div><div>OSIX</div></div>
+    <div class="content page">
+      <h3 class="big-title">My Profile</h3>
+      <div class="profile-grid">
+        <div class="profile-left">
+          <div style="width:160px;height:160px;border-radius:12px;background:linear-gradient(90deg,var(--c3),var(--c4));display:flex;align-items:center;justify-content:center;color:var(--c6);font-weight:700">•••</div>
+          <p class="small" style="margin-top:8px">Profile photo removed (3 dots shown)</p>
+        </div>
+        <div class="profile-right">
+          <label>Name</label><input id="pfName" class="input">
+          <label>Mobile</label><input id="pfMobile" class="input">
+          <label>Email</label><input id="pfEmail" class="input">
+          <label>District</label><input id="pfDistrict" class="input">
+          <label>State</label><input id="pfState" class="input">
+          <div style="margin-top:8px">
+            <button id="editDetails" class="btn">Edit</button>
+            <button id="saveDetails" class="btn" style="margin-left:8px" onclick="initProfile()">Save</button>
           </div>
-        </section>
+        </div>
       </div>
     </div>
   </div>
+</div>
 
 <script src="script.js"></script>
-<script>initProfilePage();</script>
-</body>
-  </html>
+<script>initProfile();</script>
+</body></html>
