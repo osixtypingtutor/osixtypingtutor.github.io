@@ -1,308 +1,341 @@
-/* Simple localStorage-based user & typing system
-   - Users saved under key: 'osix_users' (array of user objects)
-   - Current user id saved under: 'osix_current'
-   - Results saved inside each user.results (array)
+/* OSIX Typing Tutor — localStorage + modern UI
+   - Local users stored under key 'osix_users_v2'
+   - Current user id under 'osix_current_v2'
 */
-const LS_USERS = 'osix_users_v1';
-const LS_CUR = 'osix_current_v1';
+const LS_USERS = 'osix_users_v2';
+const LS_CUR = 'osix_current_v2';
 
-// sample passages (you can add many more or load from JSON)
-const PASSAGES = {
-  english:{
-    low:[
-      "Practice daily to improve your typing speed and accuracy.",
-      "The quick brown fox jumps over the lazy dog."
-    ],
-    medium:[
-      "Time management and regular practice help students achieve better performance in competitive exams.",
-      "A balanced study plan with short daily tests increases retention and confidence."
-    ],
-    high:[
-      "Macroeconomic indicators such as inflation and fiscal deficit influence central bank policy decisions.",
-      "Advances in machine learning enable large-scale pattern recognition in unstructured datasets."
-    ]
-  },
-  hindi:{
-    low:[
-      "रोज़ाना अभ्यास करने से टाइपिंग तेज होती है।",
-      "अच्छी टाइपिंग हर छात्र के लिए जरूरी है।"
-    ],
-    medium:[
-      "समय प्रबंधन और नियमित अभ्यास से परीक्षार्थियों का प्रदर्शन बेहतर होता है।",
-      "नियमित छोटे परीक्षण याददाश्त बढ़ाने में मदद करते हैं।"
-    ],
-    high:[
-      "मुद्रास्फीति और वित्तीय नीतियाँ अर्थव्यवस्था पर गंभीर प्रभाव डालती हैं।",
-      "वैज्ञानिक शोध में कठोर प्रयोग और पुनरावृत्ति आवश्यक है।"
-    ]
-  }
-};
+/* ----------------- utility ----------------- */
+function readUsers(){ try{return JSON.parse(localStorage.getItem(LS_USERS))||[] }catch(e){return[]}}
+function writeUsers(u){ localStorage.setItem(LS_USERS, JSON.stringify(u))}
+function setCurrent(uid){ localStorage.setItem(LS_CUR, uid)}
+function getCurrent(){ return localStorage.getItem(LS_CUR)}
 
-/* ---------- Utilities for localStorage ---------- */
-function readUsers(){ try { return JSON.parse(localStorage.getItem(LS_USERS))||[] } catch(e){return[]} }
-function writeUsers(u){ localStorage.setItem(LS_USERS, JSON.stringify(u)) }
-function setCurrent(uid){ localStorage.setItem(LS_CUR, uid) }
-function getCurrent(){ return localStorage.getItem(LS_CUR) }
+/* ----------------- DOM ----------------- */
+const authArea = document.getElementById('authArea');
+const loginForm = document.getElementById('loginForm');
+const signupForm = document.getElementById('signupForm');
+const forgotForm = document.getElementById('forgotForm');
+const appArea = document.getElementById('appArea');
 
-/* ---------- UI references ---------- */
-const pageTitle = document.getElementById('pageTitle');
+const showSignup = document.getElementById('showSignup');
+const showLogin = document.getElementById('showLogin');
+const loginBtn = document.getElementById('loginBtn');
+const signupBtn = document.getElementById('signupBtn');
+
+const sideButtons = document.querySelectorAll('.side-btn');
 const pages = {
-  login: document.getElementById('page-login'),
-  signup: document.getElementById('page-signup'),
-  home: document.getElementById('page-home'),
-  choose: document.getElementById('page-choose'),
-  test: document.getElementById('page-test'),
-  leader: document.getElementById('page-leader'),
-  results: document.getElementById('page-results'),
-  learn: document.getElementById('page-learn'),
-  refer: document.getElementById('page-refer'),
-  allexams: document.getElementById('page-allexams'),
+  home: document.getElementById('pageHome'),
+  choose: document.getElementById('pageChoose'),
+  profile: document.getElementById('pageProfile'),
+  test: document.getElementById('pageTest'),
+  leader: document.getElementById('pageLeader'),
+  results: document.getElementById('pageResults'),
+  learn: document.getElementById('pageLearn'),
+  daily: document.getElementById('pageDaily')
 };
+const sideAvatar = document.getElementById('sideAvatar');
+const sideName = document.getElementById('sideName');
+const topAvatar = document.getElementById('topAvatar');
+const topUserName = document.getElementById('topUserName');
+const profileBig = document.getElementById('profileBig');
 
-const profileWrap = document.getElementById('profileWrap');
-const avatar = document.getElementById('avatar');
-const dropdown = document.getElementById('profileDropdown');
-const pdName = document.getElementById('pdName');
-const pdMobile = document.getElementById('pdMobile');
-const pdEmail = document.getElementById('pdEmail');
-const pdId = document.getElementById('pdId');
-const pdJoined = document.getElementById('pdJoined');
-const logoutBtn = document.getElementById('logoutBtn');
+const filePic = document.getElementById('filePic');
+const choosePicBtn = document.getElementById('choosePicBtn');
+const saveDetails = document.getElementById('saveDetails');
+const editDetails = document.getElementById('editDetails');
 
-const shareLink = document.getElementById('shareLink');
+const testsList = document.getElementById('testsList');
+const searchExam = document.getElementById('searchExam');
+const startChosen = document.getElementById('startChosen');
+const chooseLang = document.getElementById('chooseLang');
+const chooseDiff = document.getElementById('chooseDiff');
+const chooseTime = document.getElementById('chooseTime');
+const testPass = document.getElementById('testPass');
+const testInput = document.getElementById('testInput');
+const tLeft = document.getElementById('tLeft');
+const tWpm = document.getElementById('tWpm');
+const tAcc = document.getElementById('tAcc');
 
-/* ---------- Navigation & auth UI ---------- */
-document.querySelectorAll('.menu-btn').forEach(btn=>{
-  btn.addEventListener('click', ()=> {
-    document.querySelectorAll('.menu-btn').forEach(b=>b.classList.remove('active'));
-    btn.classList.add('active');
-    const p = btn.dataset.page;
-    showPage(p);
-  });
-});
-document.querySelectorAll('[data-page-open]').forEach(b=>{
-  b.addEventListener('click', ()=> showPage(b.dataset.pageOpen || b.dataset.pageOpen));
-});
+let testState = {running:false, interval:null, timeLeft:60, original:'', typed:''};
 
-/* show signup/login */
-document.getElementById('showSignup').addEventListener('click', (e)=>{ e.preventDefault(); showPage('signup'); });
-document.getElementById('showLogin').addEventListener('click', (e)=>{ e.preventDefault(); showPage('login'); });
+/* ---------- initial setup ---------- */
+document.getElementById('showSignup').addEventListener('click', (e)=>{ e.preventDefault(); loginForm.classList.add('hidden'); signupForm.classList.remove('hidden'); });
+document.getElementById('showLogin').addEventListener('click', (e)=>{ e.preventDefault(); signupForm.classList.add('hidden'); loginForm.classList.remove('hidden'); });
+document.getElementById('forgotLink').addEventListener('click', ()=>{ loginForm.classList.add('hidden'); forgotForm.classList.remove('hidden'); });
 
-/* login/signup handlers */
-document.getElementById('loginBtn').addEventListener('click', attemptLogin);
-document.getElementById('signupBtn').addEventListener('click', createAccount);
+loginBtn.addEventListener('click', attemptLogin);
+signupBtn.addEventListener('click', createAccount);
+document.getElementById('fpBack').addEventListener('click', ()=>{ forgotForm.classList.add('hidden'); loginForm.classList.remove('hidden');});
+document.getElementById('fpSend').addEventListener('click', fpSend);
 
-/* profile dropdown toggle */
-document.getElementById('avatar').addEventListener('click', ()=> {
-  dropdown.classList.toggle('hidden');
-});
-logoutBtn.addEventListener('click', ()=> {
-  localStorage.removeItem(LS_CUR);
-  location.reload();
-});
+/* side navigation */
+sideButtons.forEach(b=> b.addEventListener('click', ()=> {
+  document.querySelectorAll('.side-btn').forEach(x=>x.classList.remove('active'));
+  b.classList.add('active');
+  const p = b.dataset.page;
+  if(p==='logout'){ doLogout(); return; }
+  showPage(p);
+}));
 
-/* start test */
-document.getElementById('startTestBtn').addEventListener('click', ()=> {
-  startSelectedTest();
-});
-document.getElementById('startTestBtn').addEventListener('touchstart', ()=> {
-  startSelectedTest();
-});
+/* choose pic */
+choosePicBtn.addEventListener('click', ()=> filePic.click());
+filePic.addEventListener('change', handlePic);
 
-/* quick test */
-function quickTest(){ 
-  showPage('choose'); 
-  document.getElementById('selTime').value = '60';
-  document.getElementById('selDiff').value = 'low';
-  document.getElementById('selLang').value = 'english';
+/* profile save/edit */
+editDetails.addEventListener('click', ()=> toggleProfileEdit(true));
+saveDetails.addEventListener('click', saveProfile);
+
+/* start chosen test */
+startChosen.addEventListener('click', ()=> startSelectedTest());
+
+/* search tests */
+searchExam.addEventListener('input', renderTests);
+
+/* test input */
+function onTyping(){ // bound inline in HTML, also set here for safety
+  testState.typed = testInput.value;
+  renderPassage(testState.original, testState.typed);
+  computeLive();
 }
+window.onTyping = onTyping;
 
-/* update share link */
-function refreshShareLink(){
-  const u = location.href;
-  shareLink.textContent = u;
-}
-
-/* ---------- Page switching ---------- */
-function hideAllPages(){
-  Object.values(pages).forEach(p=>p.classList.add('hidden'));
-}
-function showPage(name){
-  hideAllPages();
-  if(name==='home') pages.home.classList.remove('hidden');
-  else if(name==='choose') pages.choose.classList.remove('hidden');
-  else if(name==='allexams') pages.allexams.classList.remove('hidden');
-  else if(name==='daily') pages.daily?.classList.remove('hidden');
-  else if(name==='leader') pages.leader.classList.remove('hidden');
-  else if(name==='results') pages.results.classList.remove('hidden');
-  else if(name==='learn') pages.learn.classList.remove('hidden');
-  else if(name==='refer') pages.refer.classList.remove('hidden');
-  else if(name==='login') pages.login.classList.remove('hidden');
-  else if(name==='signup') pages.signup.classList.remove('hidden');
-  else if(name==='test') pages.test.classList.remove('hidden');
-  pageTitle.innerText = "Osix Typing Tutor — " + (name.charAt(0).toUpperCase()+name.slice(1));
-  refreshShareLink();
-}
-
-/* ---------- Auth logic (local) ---------- */
+/* ---------- Auth functions ---------- */
 function createAccount(){
   const name = document.getElementById('suName').value.trim();
   const mobile = document.getElementById('suMobile').value.trim();
   const email = document.getElementById('suEmail').value.trim();
   const pass = document.getElementById('suPass').value;
-  if(!name || !mobile || !pass){ alert('Please fill required fields'); return; }
+  if(!name || !mobile || !pass){ alert('Please fill name, mobile and password'); return; }
   const users = readUsers();
-  if(users.find(u=>u.mobile===mobile)){ alert('Mobile already registered. Use login.'); return; }
+  if(users.find(u=>u.mobile===mobile)){ alert('Mobile already registered'); return; }
   const id = 'u'+Date.now();
-  const user = { id, name, mobile, email, pass, joined: new Date().toISOString(), results: [] , avatar: '' };
+  const user = { id, name, mobile, email, pass, district:'', state:'', joined:new Date().toISOString(), avatar:'', results:[] };
   users.push(user); writeUsers(users);
   setCurrent(id);
-  renderProfile(user);
-  showPage('home');
-  profileWrap.style.display = 'block';
-  alert('Account created. Welcome, '+name);
+  renderLoggedIn(user);
+  alert('Account created. Welcome '+name);
 }
 
+/* login with mobile+password */
 function attemptLogin(){
   const m = document.getElementById('loginMobile').value.trim();
   const p = document.getElementById('loginPass').value;
   if(!m || !p){ alert('Enter mobile and password'); return; }
-  const users = readUsers();
-  const u = users.find(x=>x.mobile===m && x.pass===p);
+  const u = readUsers().find(x=>x.mobile===m && x.pass===p);
   if(!u){ alert('Invalid credentials'); return; }
   setCurrent(u.id);
-  renderProfile(u);
-  profileWrap.style.display = 'block';
+  renderLoggedIn(u);
+}
+
+/* forgot password (local fallback) */
+function fpSend(){
+  const m = document.getElementById('fpMobile').value.trim();
+  if(!m){ alert('Enter mobile'); return; }
+  const users = readUsers();
+  const u = users.find(x=>x.mobile===m);
+  if(!u){ alert('No user with this mobile'); return; }
+  // In real app: send OTP via Firebase. Local fallback: show OTP input and allow reset (demo OTP=1234)
+  document.getElementById('fpOtpWrap').classList.remove('hidden');
+  alert('OTP (demo) sent: 1234 — in production app OTP will be sent via Firebase');
+  document.getElementById('fpResetBtn').addEventListener('click', ()=> {
+    const otp = document.getElementById('fpOtp').value.trim();
+    if(otp !== '1234'){ alert('Wrong OTP (demo)'); return; }
+    const np = document.getElementById('fpNewPass').value;
+    if(!np){ alert('Enter new password'); return; }
+    u.pass = np; writeUsers(users);
+    alert('Password reset. Please login.');
+    document.getElementById('fpOtpWrap').classList.add('hidden');
+    forgotForm.classList.add('hidden'); loginForm.classList.remove('hidden');
+  }, {once:true});
+}
+
+/* logout */
+function doLogout(){
+  localStorage.removeItem(LS_CUR);
+  location.reload();
+}
+
+/* ---------- Render logged in UI ---------- */
+function renderLoggedIn(user){
+  // hide auth, show app
+  authArea.classList.add('hidden');
+  appArea.classList.remove('hidden');
+  // set avatars & names
+  sideAvatar.src = user.avatar || ('https://ui-avatars.com/api/?name='+encodeURIComponent(user.name)+'&background=7c3aed&color=fff');
+  topAvatar.src = sideAvatar.src;
+  profileBig.src = sideAvatar.src;
+  sideName.innerText = user.name;
+  topUserName.innerText = user.name;
+  // show home page and load tests
   showPage('home');
+  renderTests();
+  renderMyResults();
+  renderLeaderBoard();
 }
 
-/* on load, check current user */
-window.addEventListener('load', ()=>{
-  const cur = getCurrent();
-  if(cur){
-    const u = readUsers().find(x=>x.id===cur);
-    if(u){ renderProfile(u); profileWrap.style.display='block'; showPage('home'); return; }
+/* ---------- profile picture handling ---------- */
+function handlePic(e){
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = function(ev){
+    const data = ev.target.result;
+    profileBig.src = data; sideAvatar.src = data; topAvatar.src = data;
+    // save to user
+    const uid = getCurrent();
+    if(uid){
+      const users = readUsers();
+      const u = users.find(x=>x.id===uid);
+      if(u){ u.avatar = data; writeUsers(users); }
+    }
+  };
+  reader.readAsDataURL(file);
+}
+
+/* profile edit/save */
+function toggleProfileEdit(on){
+  document.getElementById('pfName').disabled = !on;
+  document.getElementById('pfMobile').disabled = !on;
+  document.getElementById('pfEmail').disabled = !on;
+  document.getElementById('pfDistrict').disabled = !on;
+  document.getElementById('pfState').disabled = !on;
+}
+function saveProfile(){
+  const uid = getCurrent();
+  if(!uid) return alert('No user');
+  const users = readUsers();
+  const u = users.find(x=>x.id===uid);
+  if(!u) return;
+  u.name = document.getElementById('pfName').value.trim();
+  u.mobile = document.getElementById('pfMobile').value.trim();
+  u.email = document.getElementById('pfEmail').value.trim();
+  u.district = document.getElementById('pfDistrict').value.trim();
+  u.state = document.getElementById('pfState').value.trim();
+  writeUsers(users);
+  sideName.innerText = u.name; topUserName.innerText = u.name;
+  alert('Profile saved');
+  toggleProfileEdit(false);
+}
+
+/* ---------- Page routing ---------- */
+function hideAllPages(){ Object.values(pages).forEach(p=>p.classList.add('hidden')); }
+function showPage(name){
+  hideAllPages();
+  if(name==='home'){ pages.home.classList.remove('hidden'); }
+  else if(name==='choose'){ pages.choose.classList.remove('hidden'); }
+  else if(name==='profile'){ pages.profile.classList.remove('hidden'); }
+  else if(name==='test'){ pages.test.classList.remove('hidden'); }
+  else if(name==='leader'){ pages.leader.classList.remove('hidden'); }
+  else if(name==='results'){ pages.results.classList.remove('hidden'); }
+  else if(name==='learn'){ pages.learn.classList.remove('hidden'); }
+  else if(name==='daily'){ pages.daily?.classList.remove('hidden'); }
+  // load profile fields
+  loadProfileFields();
+}
+
+/* ---------- Tests data (we will inject 50 tests programmatically) ---------- */
+const TESTS = [];
+function generateTests(){
+  // generate 50 tests (20+ real topics can be replaced with curated texts)
+  const topics = ['CGL - Governance','CHSL - Basic Maths','Delhi Police - Comprehension','Bank PO - Economy','RRB - Technical','TGT History','UPSSSC - GK','Current Affairs','Science Tech','Environment'];
+  for(let i=1;i<=50;i++){
+    const topic = topics[i % topics.length];
+    const text = `Test ${i} — ${topic}. ` + "This is a sample paragraph of approximately two hundred words. ".repeat(8);
+    TESTS.push({ id:'t'+i, title:`Test ${i} — ${topic}`, passage: text.slice(0,1200), words:200});
   }
-  showPage('login');
-  profileWrap.style.display='none';
-  populatePassagePreview();
-  refreshShareLink();
-});
+}
+generateTests();
 
-/* render profile info */
-function renderProfile(u){
-  pdName.innerText = u.name;
-  pdMobile.innerText = u.mobile;
-  pdEmail.innerText = u.email || '—';
-  pdId.innerText = u.id;
-  pdJoined.innerText = (new Date(u.joined)).toLocaleDateString();
-  avatar.src = u.avatar || ('https://ui-avatars.com/api/?name='+encodeURIComponent(u.name)+'&background=7c3aed&color=fff');
-  dropdown.classList.add('hidden');
+/* render list of tests */
+function renderTests(){
+  testsList.innerHTML = '';
+  const q = (searchExam.value||'').toLowerCase();
+  TESTS.forEach(t=>{
+    if(q && !(t.title.toLowerCase().includes(q) || t.passage.toLowerCase().includes(q))) return;
+    const el = document.createElement('div'); el.className='test-card';
+    el.innerHTML = `<div><strong>${t.title}</strong><p class="muted small">${t.passage.slice(0,120)}...</p></div><div><button class="btn" onclick="beginTestById('${t.id}')">Start</button></div>`;
+    testsList.appendChild(el);
+  });
 }
 
-/* ---------- Typing test logic ---------- */
-let testState = { running:false, interval:null, timeLeft:60, startTs:0, original:'', typed:'' };
-
-function populatePassagePreview(){
-  const lang = document.getElementById('selLang').value || 'english';
-  const diff = document.getElementById('selDiff').value || 'low';
-  const arr = PASSAGES[lang][diff];
-  document.getElementById('passagePreview').textContent = arr[Math.floor(Math.random()*arr.length)];
+/* start test by id */
+function beginTestById(id){
+  const t = TESTS.find(x=>x.id===id);
+  if(!t) return;
+  beginTest(t.passage, 60);
 }
 
-/* update preview when selects change */
-['selLang','selDiff'].forEach(id=> {
-  const el = document.getElementById(id);
-  if(el) el.addEventListener('change', populatePassagePreview);
-});
-
-/* start selected test */
+/* start selected test from choose page */
 function startSelectedTest(){
-  const lang = document.getElementById('selLang').value;
-  const diff = document.getElementById('selDiff').value;
-  const time = parseInt(document.getElementById('selTime').value,10);
-  const arr = PASSAGES[lang][diff];
-  const text = arr[Math.floor(Math.random()*arr.length)];
-  beginTest(text,time,lang,diff);
+  const diff = chooseDiff.value;
+  const lang = chooseLang.value;
+  const time = parseInt(chooseTime.value,10) || 60;
+  // pick a test based on difficulty (simple random)
+  const idx = Math.floor(Math.random()*TESTS.length);
+  const t = TESTS[idx];
+  beginTest(t.passage, time);
 }
 
-/* begin test */
-function beginTest(text, seconds, lang, diff){
+/* ---------- Test runner ---------- */
+function beginTest(text, seconds){
   testState.original = text;
   testState.timeLeft = seconds;
   testState.startTs = Date.now();
   testState.typed = '';
-  document.getElementById('testPassage').innerHTML = renderPassageHtml(text,'');
-  document.getElementById('testInput').value = '';
-  document.getElementById('timeLeft').innerText = testState.timeLeft;
-  document.getElementById('liveWpm').innerText = 0;
-  document.getElementById('liveAcc').innerText = '0';
-  document.getElementById('liveCpm').innerText = 0;
+  document.getElementById('tLeft').innerText = testState.timeLeft;
+  document.getElementById('tWpm').innerText = 0;
+  document.getElementById('tAcc').innerText = 0;
+  renderPassage(text,'');
   showPage('test');
   // start timer
   if(testState.interval) clearInterval(testState.interval);
   testState.interval = setInterval(()=> {
     testState.timeLeft--;
-    document.getElementById('timeLeft').innerText = testState.timeLeft;
-    computeLiveStats();
+    document.getElementById('tLeft').innerText = testState.timeLeft;
+    computeLive();
     if(testState.timeLeft<=0){ finishTest(); }
   },1000);
 }
-
-/* render passage into spans */
-function renderPassageHtml(text, typed){
+function renderPassage(text, typed){
   const spans = [];
   for(let i=0;i<text.length;i++){
     const ch = text[i] === ' ' ? '\u00A0' : text[i];
     const cls = (typed[i]==null) ? '' : (typed[i]===text[i] ? 'correct' : 'wrong');
     spans.push(`<span class="${cls}">${escapeHtml(ch)}</span>`);
   }
-  return spans.join('');
+  testPass.innerHTML = spans.join('');
 }
-function escapeHtml(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-
-/* on typing */
-function onTyping(){
-  const val = document.getElementById('testInput').value;
-  testState.typed = val;
-  document.getElementById('testPassage').innerHTML = renderPassageHtml(testState.original, val);
-  computeLiveStats();
-}
-
-/* compute live stats */
-function computeLiveStats(){
-  const typed = testState.typed || '';
+function escapeHtml(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function computeLive(){
+  const typed = testInput.value || '';
+  testState.typed = typed;
   const target = testState.original || '';
-  let correctChars = 0;
-  for(let i=0;i<typed.length;i++){
-    if(typed[i] === target[i]) correctChars++;
-  }
-  const totalChars = typed.length;
-  const accuracy = totalChars ? Math.round((correctChars/totalChars)*10000)/100 : 0;
-  const elapsed = Math.max(1, ( (testState.startTs ? Math.floor((Date.now()-testState.startTs)/1000) : 0) ));
+  let correct=0;
+  for(let i=0;i<typed.length;i++) if(typed[i]===target[i]) correct++;
+  const total = typed.length;
+  const accuracy = total? Math.round((correct/total)*10000)/100 : 0;
+  const elapsed = Math.max(1, Math.floor((Date.now()-testState.startTs)/1000));
   const mins = Math.max(elapsed/60, 1/60);
   const words = typed.trim().split(/\s+/).filter(Boolean).length;
-  const wpm = Math.round(words / mins);
-  const cpm = Math.round(totalChars / mins);
-  document.getElementById('liveWpm').innerText = isFinite(wpm)?wpm:0;
-  document.getElementById('liveAcc').innerText = accuracy;
-  document.getElementById('liveCpm').innerText = isFinite(cpm)?cpm:0;
+  const wpm = Math.round(words/mins);
+  document.getElementById('tWpm').innerText = wpm;
+  document.getElementById('tAcc').innerText = accuracy;
 }
 
-/* finish test & save result */
+/* finish test & save */
 function finishTest(){
   if(testState.interval) clearInterval(testState.interval);
   const typed = testState.typed || '';
   const target = testState.original || '';
-  let correctChars = 0;
-  for(let i=0;i<typed.length;i++) if(typed[i] === target[i]) correctChars++;
-  const totalChars = typed.length;
-  const accuracy = totalChars ? Math.round((correctChars/totalChars)*10000)/100 : 0;
-  const elapsed = Math.max(1, ( (testState.startTs ? Math.floor((Date.now()-testState.startTs)/1000) : 0) ));
-  const mins = Math.max(elapsed/60, 1/60);
+  let correct=0;
+  for(let i=0;i<typed.length;i++) if(typed[i]===target[i]) correct++;
+  const total = typed.length;
+  const accuracy = total? Math.round((correct/total)*10000)/100 : 0;
+  const elapsed = Math.max(1, Math.floor((Date.now()-testState.startTs)/1000));
+  const mins = Math.max(elapsed/60,1/60);
   const words = typed.trim().split(/\s+/).filter(Boolean).length;
-  const wpm = Math.round(words / mins);
-  const cpm = Math.round(totalChars / mins);
+  const wpm = Math.round(words/mins);
 
   // save to user
   const uid = getCurrent();
@@ -310,71 +343,80 @@ function finishTest(){
     const users = readUsers();
     const u = users.find(x=>x.id===uid);
     if(u){
-      const rec = {
-        id: 'r'+Date.now(),
-        passage: testState.original.slice(0,200),
-        wpm, cpm, accuracy, elapsed, date: new Date().toISOString()
-      };
-      u.results = u.results || [];
-      u.results.unshift(rec);
+      const rec = { id:'r'+Date.now(), wpm, accuracy, elapsed, date:new Date().toISOString(), passage:testState.original.slice(0,200)};
+      u.results = u.results||[]; u.results.unshift(rec);
       writeUsers(users);
-      alert(`Test complete — WPM: ${wpm} • Accuracy: ${accuracy}%`);
+      alert('Test saved — WPM: '+wpm+' Accuracy: '+accuracy+'%');
     }
   } else {
-    alert(`Test complete — WPM: ${wpm} • Accuracy: ${accuracy}% (Login to save results)`);
+    alert('Test finished — Login to save results');
   }
-  // update UI lists
-  renderMyResults();
-  renderLeaderBoard();
+  renderMyResults(); renderLeaderBoard();
   showPage('results');
 }
 
-/* abort */
-function abortToDashboard(){
-  if(testState.interval) clearInterval(testState.interval);
-  showPage('home');
-}
+/* cancel */
+function cancelTest(){ if(testState.interval) clearInterval(testState.interval); showPage('home'); }
 
-/* render my results */
+/* ---------- Results & leaderboard ---------- */
 function renderMyResults(){
   const uid = getCurrent();
-  const container = document.getElementById('myResultsList');
-  container.innerHTML = '';
-  if(!uid){ container.innerHTML = '<p class="muted">Login to see saved results.</p>'; return; }
+  const el = document.getElementById('myResultsList');
+  el.innerHTML='';
+  if(!uid){ el.innerHTML='<p class="muted">Login to see results</p>'; return; }
+  const users = readUsers(); const u = users.find(x=>x.id===uid);
+  if(!u || !u.results || u.results.length===0){ el.innerHTML='<p class="muted">No attempts yet</p>'; return; }
+  u.results.forEach(r=>{
+    const div = document.createElement('div'); div.className='test-card';
+    div.innerHTML = `<strong>${r.wpm} WPM</strong><div class="muted small">${(new Date(r.date)).toLocaleString()}</div><div class="muted small">${r.passage.slice(0,120)}...</div>`;
+    el.appendChild(div);
+  });
+}
+function renderLeaderBoard(){
+  const container = document.getElementById('leaderboardList') || document.createElement('div');
+  if(!document.getElementById('leaderboardList')) return;
+  container.innerHTML='';
+  const users = readUsers();
+  let all = [];
+  users.forEach(u=> (u.results||[]).forEach(r=> all.push({user:u.name||u.mobile,wpm:r.wpm,acc:r.accuracy,date:r.date})));
+  all.sort((a,b)=>b.wpm - a.wpm);
+  if(all.length===0){ container.innerHTML='<p class="muted">No results yet</p>'; return; }
+  all.slice(0,50).forEach(r=>{
+    const d = document.createElement('div'); d.className='leader-item';
+    d.innerHTML = `<div><strong>${r.user}</strong><div class="small muted">${r.wpm} WPM • ${r.acc}%</div></div><div class="small muted">${(new Date(r.date)).toLocaleDateString()}</div>`;
+    container.appendChild(d);
+  });
+}
+
+/* ---------- helper: load profile fields ---------- */
+function loadProfileFields(){
+  const uid = getCurrent();
+  if(!uid) return;
   const users = readUsers();
   const u = users.find(x=>x.id===uid);
-  if(!u || !u.results || u.results.length===0){ container.innerHTML = '<p class="muted">No results yet. Take a test!</p>'; return; }
-  u.results.forEach(r=>{
-    const el = document.createElement('div');
-    el.className='leader-item';
-    el.innerHTML = `<div><strong>${r.wpm} WPM</strong><div class="small muted">${r.passage}</div></div><div class="small muted">${(new Date(r.date)).toLocaleString()}</div>`;
-    container.appendChild(el);
-  });
+  if(!u) return;
+  document.getElementById('pfName').value = u.name || '';
+  document.getElementById('pfMobile').value = u.mobile || '';
+  document.getElementById('pfEmail').value = u.email || '';
+  document.getElementById('pfDistrict').value = u.district || '';
+  document.getElementById('pfState').value = u.state || '';
+  // set avatars
+  const av = u.avatar || ('https://ui-avatars.com/api/?name='+encodeURIComponent(u.name)+'&background=7c3aed&color=fff');
+  sideAvatar.src = av; topAvatar.src = av; profileBig.src = av;
 }
 
-/* render leaderboard (local top scores from all users) */
-function renderLeaderBoard(){
-  const container = document.getElementById('leaderboardList');
-  container.innerHTML = '';
-  const users = readUsers();
-  const all = [];
-  users.forEach(u=>{
-    (u.results||[]).forEach(r=>{
-      all.push({user:u.name||u.mobile, wpm:r.wpm, acc:r.accuracy, date:r.date});
-    });
-  });
-  all.sort((a,b)=>b.wpm - a.wpm);
-  if(all.length===0) { container.innerHTML = '<p class="muted">No results yet.</p>'; return; }
-  all.slice(0,50).forEach(r=>{
-    const el = document.createElement('div'); el.className='leader-item';
-    el.innerHTML = `<div><strong>${r.user}</strong><div class="small muted">${r.wpm} WPM • ${r.acc}%</div></div><div class="small muted">${(new Date(r.date)).toLocaleDateString()}</div>`;
-    container.appendChild(el);
-  });
-}
+/* ---------- initial UI state ---------- */
+window.addEventListener('load', ()=>{
+  const cur = getCurrent();
+  if(cur){
+    const u = readUsers().find(x=>x.id===cur);
+    if(u){ renderLoggedIn(u); return; }
+  }
+  // else show auth
+  authArea.classList.remove('hidden');
+  appArea.classList.add('hidden');
+  renderTests();
+});
 
-/* initial renders for results & leaderboard */
-renderMyResults();
-renderLeaderBoard();
-
-/* ensure share link filled */
-document.addEventListener('DOMContentLoaded', ()=> refreshShareLink());
+/* expose beginTestById for on-page buttons */
+window.beginTestById = beginTestById;
