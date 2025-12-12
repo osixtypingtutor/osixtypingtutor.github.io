@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Osix Typing Tutor – Dashboard</title>
+
+<style>
+    body {
+        margin: 0;
+        padding: 0;
+        font-family: Arial, sans-serif;
+        background: #0f172a;
+        color: white;
+        display: flex;
+        height: 100vh;
+    }
+
+    /* Sidebar */
+    .sidebar {
+        width: 230px;
+        background: rgba(255,255,255,0.04);
+        backdrop-filter: blur(12px);
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        border-right: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .sidebar-title {
+        font-size: 22px;
+        font-weight: bold;
+        margin-bottom: 15px;
+    }
+
+    .menu-item {
+        padding: 12px;
+        margin: 6px 0;
+        border-radius: 10px;
+        cursor: pointer;
+        transition: 0.2s;
+    }
+
+    .menu-item:hover {
+        background: rgba(255,255,255,0.15);
+    }
+
+    .bottom-logo {
+        margin-top: auto;
+        text-align: center;
+        opacity: 0.7;
+        font-size: 14px;
+    }
+
+    /* Top bar */
+    .topbar {
+        height: 70px;
+        background: rgba(255,255,255,0.06);
+        backdrop-filter: blur(15px);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0 25px;
+        border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .profile-box {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .profile-box img {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+    }
+
+    /* Main Content */
+    .main-area {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .content {
+        padding: 20px;
+    }
+
+    .search-bar input {
+        width: 100%;
+        padding: 12px;
+        border-radius: 10px;
+        border: none;
+        outline: none;
+        margin-top: 10px;
+        background: rgba(255,255,255,0.12);
+        color: white;
+        font-size: 15px;
+    }
+
+    .tags {
+        margin-top: 20px;
+        display: flex;
+        gap: 10px;
+    }
+
+    .tag {
+        padding: 8px 15px;
+        background: rgba(255,255,255,0.12);
+        border-radius: 20px;
+        cursor: pointer;
+    }
+
+    .tests {
+        margin-top: 25px;
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+        gap: 20px;
+    }
+
+    .test-card {
+        background: rgba(255,255,255,0.07);
+        padding: 15px;
+        border-radius: 12px;
+        backdrop-filter: blur(10px);
+    }
+
+    .test-card button {
+        width: 100%;
+        padding: 8px;
+        margin-top: 10px;
+        border: none;
+        border-radius: 8px;
+        background: #6366f1;
+        color: white;
+        cursor: pointer;
+    }
+
+</style>
+
+<script>
+window.onload = () => {
+    let name = localStorage.getItem("student_name") || "Student";
+    document.getElementById("studentName").innerText = name;
+};
+</script>
+
+</head>
+<body>
+
+<!-- Sidebar -->
+<div class="sidebar">
+    <div class="sidebar-title">Menu</div>
+
+    <div class="menu-item">Home</div>
+    <div class="menu-item">Learning Typing</div>
+    <div class="menu-item">Choose Test</div>
+    <div class="menu-item">Daily Live Typing</div>
+    <div class="menu-item">Live Leader Board</div>
+    <div class="menu-item">My Results</div>
+    <div class="menu-item" onclick="logout()">Logout</div>
+
+    <div class="bottom-logo">
+        <div>🟣 OSIX</div>
+        <small>Made in India 🇮🇳</small>
+    </div>
+</div>
+
+<!-- Main Area -->
+<div class="main-area">
+
+    <div class="topbar">
+        <div class="profile-box">
+            <img src="https://via.placeholder.com/40" alt="Profile">
+            <b id="studentName">Student</b>
+        </div>
+
+        <div><b>OSIX</b></div>
+    </div>
+
+    <div class="content">
+
+        <h2>Search Typing Exams</h2>
+
+        <div class="search-bar">
+            <input type="text" placeholder="Search typing exams...">
+        </div>
+
+        <div class="tags">
+            <div class="tag">CGL</div>
+            <div class="tag">CHSL</div>
+            <div class="tag">DELHI POLICE HCM</div>
+            <div class="tag">UPSSSC</div>
+        </div>
+
+        <h3 style="margin-top:25px;">Available Tests</h3>
+
+        <div class="tests">
+            <div class="test-card">
+                <b>Test 1 – CHSL Basic Maths</b>
+                <p>This is a sample paragraph of 200+ words.</p>
+                <button>Start</button>
+            </div>
+            <div class="test-card">
+                <b>Test 2 – Delhi Police Comprehension</b>
+                <p>This is a sample paragraph of 200+ words.</p>
+                <button>Start</button>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+function logout() {
+    localStorage.clear();
+    window.location.href = "index.html";
+}
+</script>
+
+</body>
+</html>
