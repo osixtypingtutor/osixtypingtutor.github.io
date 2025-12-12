@@ -1,76 +1,191 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>OSIXTypingTutor</title>
-    <link rel="stylesheet" href="style.css" />
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Osix Typing Tutor</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
+  <div class="app">
+    <!-- Left Sidebar -->
+    <aside class="sidebar glass" id="sidebar">
+      <div class="brand">
+        <div class="logo">OSIX</div>
+        <div class="title">Osix Typing Tutor</div>
+      </div>
+      <nav class="menu">
+        <button data-page="home" class="menu-btn active">🏠 Home</button>
+        <button data-page="choose" class="menu-btn">📝 Choose Test</button>
+        <button data-page="allexams" class="menu-btn">📚 All Exams</button>
+        <button data-page="daily" class="menu-btn">⚡ Daily live test</button>
+        <button data-page="leader" class="menu-btn">🏆 Leader Board</button>
+        <button data-page="results" class="menu-btn">📊 My Result</button>
+        <button data-page="learn" class="menu-btn">🎯 Learn Typing</button>
+        <button data-page="refer" class="menu-btn">💸 Refer & Earn</button>
+      </nav>
+      <div class="sidebar-footer small">Offline • Data stored in browser</div>
+    </aside>
 
-    <!-- Login Screen -->
-    <div id="login-screen" class="screen active">
-        <h2>OSIXTypingTutor Login</h2>
-        <input id="phoneInput" type="text" placeholder="Enter Phone Number" />
-        <button onclick="sendOTP()">Send OTP</button>
+    <!-- Main area -->
+    <main class="main">
+      <!-- Top bar -->
+      <header class="topbar glass">
+        <div class="page-title" id="pageTitle">Osix Typing Tutor — Login</div>
+        <div class="top-right">
+          <div id="profileWrap" class="profile-wrap" style="display:none;">
+            <img id="avatar" src="" alt="avatar" class="avatar" />
+            <div id="profileDropdown" class="profile-dropdown glass hidden">
+              <div class="pd-name" id="pdName"></div>
+              <div class="pd-row"><strong>Mobile:</strong> <span id="pdMobile"></span></div>
+              <div class="pd-row"><strong>Email:</strong> <span id="pdEmail"></span></div>
+              <div class="pd-row"><strong>User ID:</strong> <span id="pdId"></span></div>
+              <div class="pd-row"><strong>Joined:</strong> <span id="pdJoined"></span></div>
+              <button id="logoutBtn" class="btn danger">Logout</button>
+            </div>
+          </div>
+        </div>
+      </header>
 
-        <input id="otpInput" type="text" placeholder="Enter OTP" style="display:none;" />
-        <button id="verifyBtn" onclick="verifyOTP()" style="display:none;">Verify OTP</button>
+      <!-- Pages container -->
+      <section class="content">
 
-        <p onclick="showCreate()">Create Account</p>
-    </div>
+        <!-- LOGIN / SIGNUP -->
+        <div id="page-login" class="page card center">
+          <h1 class="glass-title">Osix Typing Tutor</h1>
+          <h3 class="sub">Login</h3>
 
-    <!-- Sign Up Screen -->
-    <div id="signup-screen" class="screen">
-        <h2>Create Account</h2>
-        <input id="nameInput" type="text" placeholder="Your Name" />
-        <input id="phoneSignup" type="text" placeholder="Phone Number" />
-        <button onclick="createAccount()">Sign Up</button>
-        <p onclick="showLogin()">Back to Login</p>
-    </div>
+          <input id="loginMobile" placeholder="Mobile number (+91...)" type="text" />
+          <input id="loginPass" placeholder="Password" type="password" />
+          <button id="loginBtn" class="btn primary">Login</button>
 
-    <!-- Dashboard -->
-    <div id="dashboard" class="screen">
-        <h2>Welcome to OSIXTypingTutor</h2>
+          <p class="muted">New here? <a href="#" id="showSignup">Create account</a></p>
 
-        <select id="language">
-            <option value="english">English</option>
-            <option value="hindi">Hindi</option>
-        </select>
+          <hr/>
+          <p class="muted small">Demo accounts are stored locally on this device.</p>
+        </div>
 
-        <select id="difficulty">
-            <option value="low">Low</option>
-            <option value="medium">Medium</option>
-            <option value="high">High</option>
-        </select>
+        <div id="page-signup" class="page card center hidden">
+          <h1 class="glass-title">Create Account</h1>
 
-        <select id="testTime">
-            <option value="60">1 Minute</option>
-            <option value="300">5 Minute</option>
-            <option value="600">10 Minute</option>
-        </select>
+          <input id="suName" placeholder="Full name" type="text" />
+          <input id="suMobile" placeholder="Mobile number (+91...)" type="text" />
+          <input id="suEmail" placeholder="Email (optional)" type="email" />
+          <input id="suPass" placeholder="Password" type="password" />
+          <button id="signupBtn" class="btn primary">Sign up</button>
+          <p class="muted">Already have account? <a href="#" id="showLogin">Login</a></p>
+        </div>
 
-        <button onclick="startTest()">Start Test</button>
-    </div>
+        <!-- HOME -->
+        <div id="page-home" class="page card hidden">
+          <h2>Welcome to Osix Typing Tutor</h2>
+          <p class="muted">Choose a test, practice daily and track progress. Modern glass UI — local data only.</p>
+          <div class="home-grid">
+            <div class="home-card">
+              <h3>Quick test</h3>
+              <p>1-minute speed challenge</p>
+              <button class="btn" onclick="quickTest()">Start Quick</button>
+            </div>
+            <div class="home-card">
+              <h3>Daily live</h3>
+              <p>Take today’s live challenge</p>
+              <button class="btn" data-page-open="daily">Join</button>
+            </div>
+            <div class="home-card">
+              <h3>Top performers</h3>
+              <p>See leaderboard</p>
+              <button class="btn" data-page-open="leader">Open</button>
+            </div>
+          </div>
+        </div>
 
-    <!-- Test Screen -->
-    <div id="test-screen" class="screen">
-        <h2>Typing Test</h2>
-        <div id="timer">60</div>
-        <div id="textDisplay"></div>
-        <textarea id="userInput" placeholder="Start typing..." oninput="checkInput()"></textarea>
+        <!-- CHOOSE TEST -->
+        <div id="page-choose" class="page card hidden">
+          <h2>Choose Test</h2>
+          <div class="controls-row">
+            <select id="selLang">
+              <option value="english">English</option>
+              <option value="hindi">हिन्दी</option>
+            </select>
+            <select id="selDiff">
+              <option value="low">Low</option>
+              <option value="medium">Medium</option>
+              <option value="high">High</option>
+            </select>
+            <select id="selTime">
+              <option value="60">1 Minute</option>
+              <option value="300">5 Minutes</option>
+              <option value="600">10 Minutes</option>
+            </select>
+            <button id="startTestBtn" class="btn primary">Start Test</button>
+          </div>
 
-        <button onclick="finishTest()">Finish</button>
-    </div>
+          <div id="passagePreview" class="passage card glass" aria-live="polite"></div>
+          <p class="muted small">Tip: Use headphones and practice daily.</p>
+        </div>
 
-    <!-- Result Screen -->
-    <div id="result-screen" class="screen">
-        <h2>Your Result</h2>
-        <p id="wpm"></p>
-        <p id="accuracy"></p>
-        <button onclick="showDashboard()">Back to Dashboard</button>
-    </div>
+        <!-- TEST -->
+        <div id="page-test" class="page card hidden">
+          <div class="test-top">
+            <div>Time left: <span id="timeLeft">60</span>s</div>
+            <div>WPM: <span id="liveWpm">0</span></div>
+            <div>Accuracy: <span id="liveAcc">0</span>%</div>
+            <div>CPM: <span id="liveCpm">0</span></div>
+          </div>
 
-    <script src="script.js"></script>
+          <div id="testPassage" class="passage test-passage"></div>
+          <textarea id="testInput" placeholder="Start typing..." oninput="onTyping()"></textarea>
+
+          <div class="test-actions">
+            <button id="finishTestBtn" class="btn">Finish</button>
+            <button id="pauseTestBtn" class="btn">Pause</button>
+            <button class="btn" onclick="abortToDashboard()">Cancel</button>
+          </div>
+        </div>
+
+        <!-- Leaderboard -->
+        <div id="page-leader" class="page card hidden">
+          <h2>Leader Board (Local)</h2>
+          <div id="leaderboardList" class="leaderboard"></div>
+        </div>
+
+        <!-- Results -->
+        <div id="page-results" class="page card hidden">
+          <h2>My Results</h2>
+          <div id="myResultsList"></div>
+        </div>
+
+        <!-- Learn Typing -->
+        <div id="page-learn" class="page card hidden">
+          <h2>Learn Typing</h2>
+          <p class="muted">Short lessons and finger drills will appear here. (Placeholder)</p>
+        </div>
+
+        <!-- Refer -->
+        <div id="page-refer" class="page card hidden">
+          <h2>Refer & Earn</h2>
+          <p class="muted">Share this site and earn points (local demo).</p>
+          <div class="muted small">Share this link: <code id="shareLink"></code></div>
+        </div>
+
+        <!-- All Exams -->
+        <div id="page-allexams" class="page card hidden">
+          <h2>All Exams</h2>
+          <p class="muted">Exam categories: SSC, Bank PO, RRB, Police, TGT etc. (sample)</p>
+          <ul class="muted">
+            <li>SSC CGL</li>
+            <li>Bank PO</li>
+            <li>RRB NTPC</li>
+            <li>Delhi Police</li>
+            <li>TGT / PGT</li>
+          </ul>
+        </div>
+
+      </section>
+    </main>
+  </div>
+
+  <script src="script.js"></script>
 </body>
-</html>
+    </html>
+    
